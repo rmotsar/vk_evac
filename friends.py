@@ -35,7 +35,7 @@ def get_friends_phones():
             if type(c[key]) != int:
                 if type(c[key]) != list:
                     c[key] = write_unicode(c[key])
-            print key, c[key]
+            print((key, c[key]))
 
         f.writerow([c["first_name"],
                     c["last_name"],
@@ -60,7 +60,7 @@ def get_groups():
                 if type(g[key]) != int:
                     if type(g[key]) != list:
                         g[key] = write_unicode(g[key])
-                print key, g[key]
+                print((key, g[key]))
             f.writerow([g['name'], g['screen_name'], g['type'], priority])
         except TypeError:
             pass
