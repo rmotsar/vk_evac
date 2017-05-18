@@ -1,20 +1,7 @@
 import csv
-import json
 
-import vkontakte
+from src.auth import api
 
-
-# First, authenticate with app (see readme for reference)
-with open('resources/token.json') as data_file:
-    data = json.load(data_file)
-token = data['token']
-vk = vkontakte.API(token=token)
-
-
-# Some demo functions for debug
-# print vk.getServerTime()
-# var = vk.get('getProfiles', uids='1,2')
-# var = vk.get('friends.get', fields='name')
 
 # Method for working with russian text
 def write_unicode(text, charset='utf-8'):
@@ -27,7 +14,7 @@ def get_friends_phones():
     friends.csv file along with the friend's phone numbers.
     :return: 
     """
-    cont = vk.get('friends.get', fields='contacts')
+    cont = api.get('friends.get', fields='contacts')
     f = csv.writer(open("friends.csv", "wb+"))
     f.writerow(["name", "surname", "home_phone", "mobile"])
     for c in cont:
@@ -49,7 +36,7 @@ def get_groups():
     groups.csv file along with the groups relevance and type
     :return: 
     """
-    groups = vk.get('groups.get', extended=1, fields='name')
+    groups = api.get('groups.get', extended=1, fields='name')
     priority = -1
     f = csv.writer(open("groups.csv", "wb+"))
     f.writerow(["name", 'screen_name', "type", "priority"])
@@ -69,4 +56,4 @@ def get_groups():
 
 
 # get_friends_phones()
-get_groups()
+# get_groups()
