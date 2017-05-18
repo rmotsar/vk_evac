@@ -10,4 +10,3 @@ access_token = data['token']
 
 vk_session = vk.Session(access_token=access_token)
 api = vk.API(vk_session, v='5.64', timeout=10)
-

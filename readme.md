@@ -1,19 +1,22 @@
-### Vk evac pack
+# VK Evacuation pack
 
-The repo helps to save friends list to csv along with their mobile phones (if accessible).
-It also saves groups of 
+Description will be here soon
 
-Please refer _http://github.com/stleon/vk_friends
-to get token to authenticate to vk API. The procedure is described there.
+## Requirements
 
-Also, use these for better understanding:
-https://pypi.python.org/pypi/vkontakte
-https://vk.com/dev/groups.get
+- Python==3.6.1
+- MongoDB==3.4.4
 
-Access token should be located at `resources/token.json`
+Required python libs available in ``` requirements.txt ```
+
+## How to use
+
+Access token should be located at resources/token.json
 
 token.json file example:
 
-`{
-"token" : "YOUR_ACCESS_TOKEN"
-}`
+{ "token" : "YOUR_ACCESS_TOKEN" }
+
+### Message evacuation
+
+``` python src/messages.py ```
