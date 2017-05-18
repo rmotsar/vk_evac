@@ -1,72 +1,78 @@
+import logging
+
+from vk.exceptions import VkAPIError
+import time
+
 from src.auth import api
-from src.database import session
-from src.models import Conversation, Message
+from src.models import conversations, messages
 
 
-def get_dialogs():
+def get_dialogs(offset: int = 0, batch_size: int = 200):
     """
     
-    Method for parsing all identifiers for chats and personal conversations 
-    
-    :return: dict() of pairs <id>:<conversation_type>
-    
+    :param offset: 
+    :param batch_size: 
+    :return: 
     """
-    offset = 0
-    batch_size = 200
-
-    results = dict()
 
     while True:
-        response = api.messages.getDialogs(offset=offset, count=batch_size)
-
-        if (response['count'] - (offset * batch_size)) <= 0:
+        # Question: is it good practice for repeating try-except blocks?
+        while True:
+            try:
+                response = api.messages.getDialogs(offset=offset, count=batch_size)
+            except VkAPIError:
+                logging.debug("Request limit")
+                time.sleep(1)
+                continue
             break
-        offset += 1
 
-        for item in response['items']:
-            conversation = Conversation()
-            message = item['message']
-            if 'chat_id' in message.keys():
-                conversation_id = 2000000000 + int(message['chat_id'])
-                conversation_type = 'chat'
+        offset += batch_size
 
-            else:
-                conversation_id = message['user_id']
-                conversation_type = 'private'
+        batch_size = response['count'] - offset if response['count'] - offset < batch_size else batch_size
 
-            conversation.id = conversation_id
-            conversation.type = conversation_type
+        conversations.insert_many(response['items'])
 
-            session.add(conversation)
-
-        # todo: exception catcher
-        session.commit()
+        if offset >= response['count']:
+            break
 
 
-def parse_messages(conversation_id: int):
-    offset = 0
-    batch_size = 200
-
+def parse_messages(conversation_id: int, offset: int = 0, batch_size: int = 200):
     while True:
-        response = api.messages.getHistory(user_id=conversation_id, offset=offset, count=batch_size)
-
-        if (response['count'] - (offset * batch_size)) <= 0:
+        # Question: is it good practice for repeating try-except blocks?
+        while True:
+            try:
+                response = api.messages.getHistory(user_id=conversation_id, offset=offset, count=batch_size)
+            except VkAPIError:
+                logging.debug("Request limit")
+                time.sleep(1)
+                continue
             break
-        offset += 1
 
-        for item in response['items']:
-            message = Message(**item)
+        offset += batch_size
 
-            session.add(message)
-            print(item)
-        session.commit()
-        print(response)
+        batch_size = response['count'] - offset if response['count'] - offset < batch_size else batch_size
+        messages.insert_many(response['items'])
 
-
-def download_attachment():
-    pass
+        if offset >= response['count']:
+            break
 
 
 if __name__ == '__main__':
-    # print(get_dialogs())
-    parse_messages(204816945)
+    # # For debug only: cleaning database before running
+    # conversations.delete_many({})
+    # messages.delete_many({})
+
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Requesting of conversation list")
+    get_dialogs()
+    logging.info("Done! Parsed {0} conversations".format(conversations.count()))
+
+    for conversation in conversations.find():
+        info = conversation['message']
+        conversation_id = int(info['chat_id']) + 2000000000 if ('chat_id' in info) else info['user_id']
+
+        logging.info("Conversation: {0}".format(conversation_id))
+
+        parse_messages(conversation_id)
+
+    logging.info("Done! Parsed {0} messages".format(messages.count()))
